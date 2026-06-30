@@ -41,6 +41,13 @@ No dedicated step — InvokeAI downloads models itself. In the running app open
 Drive root and is reused on every later session. For CivitAI, set your API key in the
 Model Manager settings first.
 
+## Password-protecting the link
+
+Set `AUTH_USER` / `AUTH_PASSWORD` in the Start form. A [Caddy](https://caddyserver.com)
+reverse proxy then enforces HTTP Basic Auth on port `9091` and cloudflared tunnels that
+port instead of InvokeAI directly, so the public `trycloudflare.com` link prompts for
+credentials (websockets included). Leave `AUTH_PASSWORD` empty for an unprotected link.
+
 ## GPU choice
 
 Best throughput and the only Colab GPU that fits large models (Flux.1/Flux.2, SD 3.5 Large,
