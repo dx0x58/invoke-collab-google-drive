@@ -5,7 +5,8 @@ the latest [InvokeAI](https://github.com/invoke-ai/InvokeAI) web UI on a Colab G
 **persistent state on Google Drive** — models, generated images, the database and config
 survive runtime restarts.
 
-Two steps only: **Start** and **Stop**.
+One cell to run: **Start InvokeAI** (a Colab form — only the description and input fields
+are shown, the code is collapsed). Stop by killing the Colab runtime.
 
 ## Design
 
@@ -22,11 +23,11 @@ background, so Start finishes and Stop can be run as a separate cell whenever yo
 
 1. Open `invokeai_colab.ipynb` in Google Colab.
 2. `Runtime -> Change runtime type -> A100 GPU` (Colab Pro/Pro+ for A100/L4; T4 on free tier).
-3. Run **Step 1 — Start**: authorizes Drive, installs `invokeai[cuda]` (cu128 torch
-   wheels), launches InvokeAI in the background and prints a public
-   `https://*.trycloudflare.com` URL. Open it once the server is up.
-4. Run **Step 2 — Stop** when finished: kills the server and tunnel, flushes + unmounts
-   Drive. To free the GPU: `Runtime -> Disconnect and delete runtime`.
+3. Fill the **Start InvokeAI** form (Drive location, login) and run it: authorizes Drive,
+   installs `invokeai[cuda]` (cu128 torch wheels), launches InvokeAI in the background and
+   prints a public `https://*.trycloudflare.com` URL plus the login. Open it once up.
+4. To stop, kill the runtime: `Runtime -> Disconnect and delete runtime`. Data stays on
+   Drive; run the cell again next time to resume.
 
 ## Drive location
 
