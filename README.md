@@ -26,6 +26,9 @@ while only the data that must survive is kept on the Drive FUSE mount.
    - **Step 4** — start a cloudflared tunnel and launch `invokeai-web`; open the printed
      `https://*.trycloudflare.com` URL once the server is up.
 4. Install models from the UI **Model Manager**. They download into the Drive root once.
+5. **Shutdown** — when finished, press Stop on the Step 4 cell, then run the Shutdown
+   cell (kills the tunnel, flushes + unmounts Drive). To free the GPU:
+   `Runtime -> Disconnect and delete runtime`.
 
 ## GPU choice
 
