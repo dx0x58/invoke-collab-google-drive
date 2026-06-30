@@ -28,6 +28,12 @@ background, so Start finishes and Stop can be run as a separate cell whenever yo
 4. Run **Step 2 — Stop** when finished: kills the server and tunnel, flushes + unmounts
    Drive. To free the GPU: `Runtime -> Disconnect and delete runtime`.
 
+## Drive location
+
+By default data goes to `My Drive/invokeai`. Change it with the Start form fields
+`DRIVE_NAME` (`My Drive` for your personal drive, or the exact name of a Shared Drive) and
+`INVOKEAI_FOLDER`.
+
 ## Downloading models
 
 No dedicated step — InvokeAI downloads models itself. In the running app open
@@ -42,6 +48,9 @@ Qwen Image) without heavy offloading: **A100 (40 GB)**. Fallback: L4 (24 GB) > T
 
 ## Notes
 
+- **protobuf**: Start upgrades protobuf to `>=5.26` — Colab ships an older build that
+  crashes diffusers (`cannot import name 'runtime_version'`), which otherwise leaves the
+  server down and the tunnel returning 502 Bad Gateway.
 - **Tunnel URL** changes every launch (cloudflare quick tunnels are ephemeral). For a stable
   URL, switch to an authenticated ngrok / cloudflare named tunnel.
 - **SQLite on Drive**: fine for a single user. On a rare "database is locked", run Stop, wait
