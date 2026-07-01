@@ -7,7 +7,7 @@ survive when the runtime stops. Open the notebook, fill a short form, run one ce
 the printed link.
 
 > Open in Colab:
-> **https://colab.research.google.com/github/dx0x58/invoke-collab-google-drive/blob/main/invokeai_colab.ipynb**
+> **https://colab.research.google.com/github/dx0x58/invokeai-colab-google-drive/blob/main/invokeai_colab.ipynb**
 
 ## Features
 
