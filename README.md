@@ -1,68 +1,100 @@
-# InvokeAI on Google Colab (persistent)
+# InvokeAI on Google Colab — persistent, on Google Drive
 
 A single Google Colab notebook ([`invokeai_colab.ipynb`](invokeai_colab.ipynb)) that runs
-the latest [InvokeAI](https://github.com/invoke-ai/InvokeAI) web UI on a Colab GPU with
-**persistent state on Google Drive** — models, generated images, the database and config
-survive runtime restarts.
+the latest [InvokeAI](https://github.com/invoke-ai/InvokeAI) web UI on a Colab GPU and keeps
+**all state on Google Drive**, so your models, generated images, gallery and settings
+survive when the runtime stops. Open the notebook, fill a short form, run one cell, and open
+the printed link.
 
-One cell to run: **Start InvokeAI** (a Colab form — only the description and input fields
-are shown, the code is collapsed). Stop by killing the Colab runtime.
+> Open in Colab:
+> **https://colab.research.google.com/github/dx0x58/invoke-collab-google-drive/blob/main/invokeai_colab.ipynb**
 
-## Design
+## Features
+
+- **Persistent on Drive** — models, `outputs`, the database (boards/gallery/workflows) and
+  `invokeai.yaml` live under `INVOKEAI_ROOT` on Google Drive and are reused every session.
+- **One collapsed form** — code is hidden; you only set a few fields and press Run.
+- **Password-protected link** — an HTTP Basic Auth proxy sits in front of the public URL.
+- **Latest InvokeAI** — installs the current release; auto-fixes the Colab `protobuf` issue.
+- **Waits for readiness** — the link is only useful once the server is actually up, and the
+  cell reports it (no more 502 Bad Gateway guesswork).
+- **Logs cell** — the server runs in the background; a dedicated cell tails its log.
+
+## How it works
 
 | Layer | Location | Persists? | Why |
 |-------|----------|-----------|-----|
-| InvokeAI package | Colab local disk | No | Fast install (~minutes) each session; reinstalled on Start |
-| `INVOKEAI_ROOT` (models, `outputs`, `databases/invokeai.db`, `invokeai.yaml`) | Google Drive (`/content/drive/MyDrive/invokeai`) | Yes | The expensive/irreplaceable data; lives on Drive |
+| InvokeAI Python package | Colab local disk | No | Fast install each session; reinstalled on Start |
+| `INVOKEAI_ROOT` = `/content/drive/MyDrive/invokeai` (models, `outputs`, `databases/invokeai.db`, `invokeai.yaml`) | Google Drive | **Yes** | The expensive, irreplaceable data |
 
-The package is installed locally (not on Drive) so heavy Python I/O stays fast, while only
-the data that must survive is kept on the Drive FUSE mount. The server runs in the
-background, so Start finishes and Stop can be run as a separate cell whenever you are done.
+The package is installed to Colab's fast local disk (not Drive) so imports stay fast; only
+the data that must survive is kept on the Drive mount. The server and tunnel run in the
+background, so the Start cell finishes and prints the URL instead of blocking.
 
-## Usage
+## Quick start
 
-1. Open `invokeai_colab.ipynb` in Google Colab.
-2. `Runtime -> Change runtime type -> A100 GPU` (Colab Pro/Pro+ for A100/L4; T4 on free tier).
-3. Fill the **Start InvokeAI** form (Drive location, login) and run it: authorizes Drive,
-   installs `invokeai[cuda]` (cu128 torch wheels), launches InvokeAI in the background and
-   prints a public `https://*.trycloudflare.com` URL plus the login. Open it once up.
-4. To stop, kill the runtime: `Runtime -> Disconnect and delete runtime`. Data stays on
-   Drive; run the cell again next time to resume.
+1. Open the notebook in Colab (link above).
+2. `Runtime → Change runtime type →` pick a GPU (see **GPU** below).
+3. In the **Start InvokeAI** cell, set the fields (defaults are fine) and run it:
+   - `DRIVE_NAME` / `INVOKEAI_FOLDER` — where on Drive to store data
+     (default `My Drive` / `invokeai` → `/content/drive/MyDrive/invokeai`).
+   - `AUTH_USER` / `AUTH_PASSWORD` — login for the public link (default `invoke` / `invoke`;
+     empty password = no auth).
+   - `USE_XFORMERS` — install xformers (memory-efficient attention; modest speedup).
+4. Authorize Google Drive when prompted. Wait until the cell prints
+   `Open InvokeAI at: https://…trycloudflare.com` and the login, then open it.
+5. **To stop:** `Runtime → Disconnect and delete runtime`. Data stays on Drive; run the
+   cell again next time to resume.
 
-## Drive location
+## GPU
 
-By default data goes to `My Drive/invokeai`. Change it with the Start form fields
-`DRIVE_NAME` (`My Drive` for your personal drive, or the exact name of a Shared Drive) and
-`INVOKEAI_FOLDER`.
+Recommended default: **L4 (24 GB)** — the best balance of availability and capability on
+Colab Pro; enough for SDXL and, with offloading, Flux-class models. Step up to
+**A100 (40 GB)** only for the largest models (Flux.1/Flux.2, SD 3.5 Large, Qwen Image) at
+full size. **T4 (16 GB, free tier)** handles SD1.5/SDXL. The Start cell warns if the runtime
+has neither L4 nor A100.
 
 ## Downloading models
 
-No dedicated step — InvokeAI downloads models itself. In the running app open
-**Model Manager** and paste a HuggingFace / CivitAI / direct URL; the file lands in the
-Drive root and is reused on every later session. For CivitAI, set your API key in the
-Model Manager settings first.
+No extra step — InvokeAI downloads models itself. In the running app open **Model Manager**
+and paste a HuggingFace / CivitAI / direct URL; the file lands under the Drive root and is
+reused on every later session. For CivitAI, set your API key in the Model Manager settings
+first.
 
 ## Password-protecting the link
 
-Set `AUTH_USER` / `AUTH_PASSWORD` in the Start form. A [Caddy](https://caddyserver.com)
-reverse proxy then enforces HTTP Basic Auth on port `9091` and cloudflared tunnels that
-port instead of InvokeAI directly, so the public `trycloudflare.com` link prompts for
-credentials (websockets included). Leave `AUTH_PASSWORD` empty for an unprotected link.
+Set `AUTH_USER` / `AUTH_PASSWORD` in the form. A [Caddy](https://caddyserver.com) reverse
+proxy then enforces HTTP Basic Auth on port `9091` and cloudflared tunnels that port (so the
+public link prompts for credentials, websockets included). Leave the password empty for an
+unprotected link. Note: cloudflare quick-tunnel URLs are ephemeral and change every launch.
 
-## GPU choice
+## Logs
 
-Best throughput and the only Colab GPU that fits large models (Flux.1/Flux.2, SD 3.5 Large,
-Qwen Image) without heavy offloading: **A100 (40 GB)**. Fallback: L4 (24 GB) > T4 (16 GB).
+The server runs in the background, so its output goes to `/content/invokeai.log`, not the
+Start cell. Run the **View server logs & paths** cell to tail the log and confirm where data
+is stored (it prints `INVOKEAI_ROOT`, the newest `outputs/images`, and the `databases` dir).
+
+## Troubleshooting
+
+- **502 Bad Gateway** on the link → the server hasn't finished starting yet, or it crashed.
+  Wait, then check the **View server logs & paths** cell.
+- **`cannot import name 'runtime_version'`** → Colab's old `protobuf`. The Start cell already
+  upgrades it to `>=5.26`; just rerun Start.
+- **`invokeai-web: command not found`** (in other notebooks) → the install step didn't finish
+  before launch. Let the install cell complete first.
+- **Missing model / 404 thumbnails** → the database has records but the files aren't at the
+  current path. This happens when you mix roots/notebooks. Always use the **same** root
+  (`/content/drive/MyDrive/invokeai`); don't mix with other notebooks that use a different
+  path. Delete the dead entry in Model Manager / gallery and re-install/re-generate.
 
 ## Notes
 
-- **protobuf**: Start upgrades protobuf to `>=5.26` — Colab ships an older build that
-  crashes diffusers (`cannot import name 'runtime_version'`), which otherwise leaves the
-  server down and the tunnel returning 502 Bad Gateway.
-- **Tunnel URL** changes every launch (cloudflare quick tunnels are ephemeral). For a stable
-  URL, switch to an authenticated ngrok / cloudflare named tunnel.
-- **SQLite on Drive**: fine for a single user. On a rare "database is locked", run Stop, wait
-  for Drive to sync, then Start again. Do not open the same root from two runtimes.
-- **Drive space**: large models consume tens of GB of Drive quota.
+- **Always use one root**: keep `DRIVE_NAME = My Drive` and `INVOKEAI_FOLDER = invokeai`.
+  Mixing with other paths (e.g. `MyDrive/InvokeAI`) splits the database from the files.
+- **Drive space**: large models (Flux, SD 3.5 Large, Qwen ~40 GB) use a lot of Drive quota.
+- **SQLite on Drive**: fine for a single user. On a rare "database is locked", stop, wait a
+  few seconds for Drive to sync, and start again. Don't open the same root from two runtimes.
+- **Before killing the runtime**: stop generating a few seconds early so the database
+  finishes writing to Drive.
 
 Reference: InvokeAI install docs — https://invoke.ai/start-here/installation/
