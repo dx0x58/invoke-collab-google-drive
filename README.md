@@ -40,7 +40,9 @@ background, so the Start cell finishes and prints the URL instead of blocking.
      (default `My Drive` / `invokeai` → `/content/drive/MyDrive/invokeai`).
    - `AUTH_USER` / `AUTH_PASSWORD` — login for the public link (default `invoke` / `invoke`;
      empty password = no auth).
-   - `USE_XFORMERS` — install xformers (memory-efficient attention; modest speedup).
+   - `USE_XFORMERS` — off by default for a faster launch (the default installs plain
+     `invokeai` and reuses Colab's preinstalled torch). Enable it for memory-efficient
+     attention (saves VRAM) at the cost of a slower start (it reinstalls torch).
 4. Authorize Google Drive when prompted. Wait until the cell prints
    `Open InvokeAI at: https://…trycloudflare.com` and the login, then open it.
 5. **To stop:** `Runtime → Disconnect and delete runtime`. Data stays on Drive; run the
