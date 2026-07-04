@@ -76,6 +76,31 @@ The server runs in the background, so its output goes to `/content/invokeai.log`
 Start cell. Run the **View server logs & paths** cell to tail the log and confirm where data
 is stored (it prints `INVOKEAI_ROOT`, the newest `outputs/images`, and the `databases` dir).
 
+## Preventing idle disconnects (browser)
+
+The in-notebook `KEEP_ALIVE` toggle is best-effort — Colab's idle disconnect is driven by the
+**browser tab**, not backend load. For a stronger keep-alive, run this snippet **once** in the
+browser DevTools console (open the Colab tab, press `F12` → **Console**, paste, Enter). It
+clicks the Connect/Reconnect button every 60 s:
+
+```js
+// Colab keep-alive — clicks Connect every 60s so the session is less likely to drop.
+function _colabKeepAlive() {
+  try {
+    const b = document.querySelector('colab-connect-button');
+    const inner = b && b.shadowRoot && b.shadowRoot.querySelector('#connect');
+    (inner || b).click();
+    console.log('[keep-alive]', new Date().toLocaleTimeString(), 'clicked connect');
+  } catch (e) { console.log('[keep-alive] skip', e); }
+}
+window._colabKeepAliveId = setInterval(_colabKeepAlive, 60000);
+console.log('Colab keep-alive started. Stop with: clearInterval(window._colabKeepAliveId)');
+```
+
+Stop it with `clearInterval(window._colabKeepAliveId)`. Note: this is a UI automation
+workaround; Colab may still disconnect on its total runtime/usage limits, and running compute
+via a web UI like this is technically against Colab's terms — use responsibly.
+
 ## Troubleshooting
 
 - **502 Bad Gateway** on the link → the server hasn't finished starting yet, or it crashed.
