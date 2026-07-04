@@ -91,6 +91,10 @@ is stored (it prints `INVOKEAI_ROOT`, the newest `outputs/images`, and the `data
 
 ## Notes
 
+- **Keep-alive**: `KEEP_ALIVE` (on by default) sends a light request to the server every
+  60 s so the runtime keeps seeing activity. Best-effort — Colab's idle disconnect is mainly
+  triggered by the browser tab being inactive, which a notebook can't fully prevent; keep the
+  tab open for long unattended runs.
 - **Always use one root**: keep `DRIVE_NAME = My Drive` and `INVOKEAI_FOLDER = invokeai`.
   Mixing with other paths (e.g. `MyDrive/InvokeAI`) splits the database from the files.
 - **Drive space**: large models (Flux, SD 3.5 Large, Qwen ~40 GB) use a lot of Drive quota.
